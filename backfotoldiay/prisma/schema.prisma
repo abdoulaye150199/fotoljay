@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  VENDEUR
+  MODERATEUR
+  ADMIN
+}
+
+enum ProductStatus {
+  EN_ATTENTE
+  VALIDE
+  REJETE
+  VENDU
+  SUPPRIME
+}
+
+enum NotificationType {
+  REPUBLIER_AVANT_SUPPRESSION
+  MODERATION_DECISION
+  GENERIC
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  username       String?          @unique
+  passwordHash   String
+  displayName    String?
+  phone          String?
+  role           Role             @default(VENDEUR)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations inverses
+  products       Product[]
+  notifications  Notification[]
+  moderationLogs ModerationLog[]  @relation("Moderator")
+  productViews   ProductView[]    // inverse de viewer
+  photoViews     PhotoView[]      // inverse de viewer
+  productHistories ProductHistory[] // inverse de actor
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  title           String
+  description     String
+  priceCfa        Int?
+  sellerId        String
+  seller          User            @relation(fields: [sellerId], references: [id])
+  status          ProductStatus   @default(EN_ATTENTE)
+  isVip           Boolean         @default(false)
+  vipUntil        DateTime?
+  photos          Photo[]
+  views           ProductView[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  publishedAt     DateTime?
+  expiresAt       DateTime?
+  lastRepublishAt DateTime?
+  moderationLogs  ModerationLog[]
+  history         ProductHistory[]
+
+  @@index([title])
+  @@index([status])
+  @@index([isVip, vipUntil])
+}
+
+model Photo {
+   id                 String   @id @default(uuid())
+   productId          String
+   product            Product  @relation(fields: [productId], references: [id])
+   url                String
+   filename           String
+   mimeType           String?
+   size               Int?
+   capturedWithCamera Boolean  @default(true)
+   createdAt          DateTime @default(now())
+   views              PhotoView[]
+}
+
+model PhotoView {
+   id         String   @id @default(uuid())
+   photoId    String
+   photo      Photo    @relation(fields: [photoId], references: [id])
+   viewedAt   DateTime @default(now())
+   viewerId   String?
+   viewer     User?    @relation(fields: [viewerId], references: [id])
+
+   @@index([photoId, viewedAt])
+}
+
+model ProductView {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  viewedAt   DateTime @default(now())
+  viewerId   String?
+  viewer     User?    @relation(fields: [viewerId], references: [id])
+
+  @@index([productId, viewedAt])
+}
+
+model ProductHistory {
+  id         String         @id @default(uuid())
+  productId  String
+  product    Product        @relation(fields: [productId], references: [id])
+  action     String
+  fromStatus ProductStatus?
+  toStatus   ProductStatus?
+  note       String?
+  actorId    String?
+  actor      User?          @relation(fields: [actorId], references: [id])
+  createdAt  DateTime       @default(now())
+
+  @@index([productId, createdAt])
+}
+
+model ModerationLog {
+  id          String        @id @default(uuid())
+  productId   String
+  product     Product       @relation(fields: [productId], references: [id])
+  moderatorId String
+  moderator   User          @relation("Moderator", fields: [moderatorId], references: [id])
+  decision    ProductStatus
+  reason      String?
+  createdAt   DateTime      @default(now())
+  notifications Notification[] // inverse relation
+
+  @@index([productId, moderatorId])
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  type        NotificationType @default(GENERIC)
+  title       String
+  body        String
+  payload     Json?
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  sentAt      DateTime?
+
+  // Relation inverse
+  moderationLogId String?      
+  moderationLog   ModerationLog? @relation(fields: [moderationLogId], references: [id])
+
+  @@index([userId, isRead])
+}
+
+model CronJobLog {
+  id        String   @id @default(uuid())
+  jobName   String
+  status    String
+  detail    String?
+  runAt     DateTime @default(now())
+}
