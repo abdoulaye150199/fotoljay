@@ -1,0 +1,28 @@
+<div class="notification-item" [ngClass]="{'unread': !notification.isRead}">
+  <div class="notification-header">
+    <div class="notification-icon">
+      {{ getNotificationIcon() }}
+    </div>
+    <div class="notification-meta">
+      <span class="notification-time">{{ getTimeAgo() }}</span>
+      <button
+        *ngIf="!notification.isRead"
+        class="mark-read-btn"
+        (click)="onMarkAsRead()"
+        title="Marquer comme lu">
+        ✓
+      </button>
+    </div>
+  </div>
+
+  <div class="notification-content">
+    <h4 class="notification-title">{{ notification.title }}</h4>
+    <p class="notification-body">{{ notification.body }}</p>
+  </div>
+
+  <div class="notification-actions">
+    <button class="delete-btn" (click)="onDelete()" title="Supprimer">
+      🗑️
+    </button>
+  </div>
+</div>

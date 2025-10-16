@@ -1,0 +1,18 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Angular Material Snackbar Styles */
+.success-snackbar {
+  background-color: #8b7d6b !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background-color: #b8ab99 !important;
+  color: #1E1E1E !important;
+}

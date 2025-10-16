@@ -1,0 +1,72 @@
+<nav class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#7c6a58] via-[#a08c74] to-[#d2c2b0] text-white shadow-xl rounded-b-xl backdrop-blur-md">
+  <div class="container mx-auto px-6 py-3">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <span class="bg-white/10 rounded-lg px-3 py-1">
+          <a routerLink="/" class="text-3xl font-extrabold tracking-wide text-white hover:text-[#d2c2b0] transition duration-300">FOTOL DIAY</a>
+        </span>
+      </div>
+      <!-- Desktop Menu -->
+      <div class="hidden md:flex items-center gap-6">
+        <ng-container *ngIf="!isAuthenticated">
+          <a routerLink="/" class="text-lg font-medium hover:text-[#d2c2b0] transition duration-300">Accueil</a>
+          <a routerLink="/products" class="text-lg font-medium hover:text-[#d2c2b0] transition duration-300">Produits</a>
+          <a routerLink="/login" class="text-lg font-medium hover:text-[#d2c2b0] transition duration-300">Connexion</a>
+        </ng-container>
+        <ng-container *ngIf="isAuthenticated">
+          <a routerLink="/dashboard" class="text-lg font-medium hover:text-[#d2c2b0] transition duration-300">Dashboard</a>
+          <div class="relative">
+            <button
+              (click)="toggleNotifications()"
+              class="relative p-2 hover:bg-white/10 rounded-full transition duration-300"
+              title="Notifications">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5V7a3 3 0 00-6 0v5l-5 5h5m0 0v1a3 3 0 006 0v-1m-6 0h6"></path>
+              </svg>
+              <span *ngIf="unreadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            </button>
+            <!-- Notifications dropdown panel -->
+            <div *ngIf="showNotifications" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+              <div class="p-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">Notifications</h3>
+                <p class="text-sm text-gray-600">{{ unreadCount }} non lues</p>
+              </div>
+              <div *ngIf="notifications.length === 0" class="p-4 text-center text-gray-500">
+                Aucune notification
+              </div>
+            </div>
+          </div>
+          <button
+            (click)="logout()"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-300"
+            title="Se déconnecter">
+            Déconnexion
+          </button>
+        </ng-container>
+      </div>
+      <!-- Mobile Hamburger -->
+      <div class="md:hidden flex items-center">
+        <button (click)="showMobileMenu = !showMobileMenu" class="p-2 rounded-lg hover:bg-white/10 transition duration-300 focus:outline-none" aria-label="Menu">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile Menu Overlay -->
+    <div *ngIf="showMobileMenu" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex flex-col">
+      <div class="bg-gradient-to-r from-[#7c6a58] via-[#a08c74] to-[#d2c2b0] rounded-b-xl shadow-xl py-8 px-6 flex flex-col gap-6 text-center">
+        <ng-container *ngIf="!isAuthenticated">
+          <a routerLink="/" (click)="showMobileMenu = false" class="text-xl font-bold text-white py-2 rounded hover:bg-[#a08c74] transition duration-300">Accueil</a>
+          <a routerLink="/products" (click)="showMobileMenu = false" class="text-xl font-bold text-white py-2 rounded hover:bg-[#a08c74] transition duration-300">Produits</a>
+          <a routerLink="/login" (click)="showMobileMenu = false" class="text-xl font-bold text-white py-2 rounded hover:bg-[#a08c74] transition duration-300">Connexion</a>
+        </ng-container>
+        <ng-container *ngIf="isAuthenticated">
+          <a routerLink="/dashboard" (click)="showMobileMenu = false" class="text-xl font-bold text-white py-2 rounded hover:bg-[#a08c74] transition duration-300">Dashboard</a>
+          <button (click)="logout(); showMobileMenu = false" class="text-xl font-bold text-white py-2 rounded hover:bg-red-600 transition duration-300">Déconnexion</button>
+        </ng-container>
+        <button (click)="showMobileMenu = false" class="mt-6 text-white text-lg">Fermer</button>
+      </div>
+  </div>

@@ -1,0 +1,9 @@
+/* Navbar styles */
+nav {
+  min-height: 80px;
+}
+
+/* Ensure no gap between navbar and content */
+nav + main {
+  margin-top: 0;
+}

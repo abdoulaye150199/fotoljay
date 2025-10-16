@@ -1,0 +1,344 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header Section -->
+  <div class="bg-white shadow-sm border-b">
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div class="mb-4 lg:mb-0">
+          <h1 class="text-3xl font-bold text-gray-900">Tableau de bord</h1>
+          <p class="text-gray-600 mt-1">Gérez vos produits et modérations</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <div class="bg-blue-50 px-4 py-2 rounded-lg">
+            <div class="text-sm text-blue-600 font-medium">Total produits</div>
+            <div class="text-2xl font-bold text-blue-900">{{ products.length }}</div>
+          </div>
+          <button
+            (click)="toggleApprovedProductsModal()"
+            class="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-lg transition duration-300 flex items-center gap-2 relative"
+            title="Produits approuvés"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Produits approuvés
+            <span *ngIf="getValidatedCount() > 0" class="absolute -top-2 -right-2 bg-white text-primary text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+              {{ getValidatedCount() > 99 ? '99+' : getValidatedCount() }}
+            </span>
+          </button>
+          <button
+            *ngIf="canCreateProduct"
+            (click)="createProduct()"
+            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition duration-300 flex items-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            + Ajouter produit
+          </button>
+          <div class="bg-yellow-50 px-4 py-2 rounded-lg">
+            <div class="text-sm text-yellow-600 font-medium">En attente</div>
+            <div class="text-2xl font-bold text-yellow-900">{{ pendingCount }}</div>
+          </div>
+          <div class="bg-green-50 px-4 py-2 rounded-lg">
+            <div class="text-sm text-primary font-medium">Validés</div>
+            <div class="text-2xl font-bold text-primary-dark">{{ getValidatedCount() }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8">
+    <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+      </svg>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-lg shadow-sm border mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex">
+          <button
+            (click)="setActiveTab('pending')"
+            [class.border-primary]="activeTab === 'pending'"
+            [class.text-primary]="activeTab === 'pending'"
+            [class.bg-primary/10]="activeTab === 'pending'"
+            class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-primary hover:border-primary transition-colors"
+          >
+            <div class="flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              En attente de modération
+              <span class="ml-2 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-semibold">{{ pendingCount }}</span>
+            </div>
+          </button>
+          <button
+            (click)="setActiveTab('all')"
+            [class.border-primary]="activeTab === 'all'"
+            [class.text-primary]="activeTab === 'all'"
+            [class.bg-primary/10]="activeTab === 'all'"
+            class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-primary hover:border-primary transition-colors"
+          >
+            <div class="flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              Tous les produits
+              <span class="ml-2 bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-semibold">{{ products.length }}</span>
+            </div>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="bg-white rounded-lg shadow-sm border p-12">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600 font-medium">Chargement des produits...</p>
+        <p class="text-sm text-gray-500 mt-2">Veuillez patienter pendant que nous récupérons vos données.</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredProducts.length === 0" class="bg-white rounded-lg shadow-sm border p-12">
+      <div class="text-center">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-5v2m0 0v2m0-2h2m-2 0h-2"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">
+          {{ activeTab === 'pending' ? 'Aucun produit en attente' : 'Aucun produit trouvé' }}
+        </h3>
+        <p class="text-gray-600 mb-4">
+          {{ activeTab === 'pending' ? 'Tous les produits ont été modérés.' : 'Il n\'y a encore aucun produit dans votre catalogue.' }}
+        </p>
+        <div *ngIf="activeTab === 'pending' && products.length > 0" class="text-sm text-gray-500">
+          <p>Total produits: <span class="font-semibold">{{ products.length }}</span></p>
+          <p>Produits validés: <span class="font-semibold text-primary">{{ getValidatedCount() }}</span></p>
+        </div>
+      </div>
+   
+      <!-- Approved Products Modal -->
+      <div *ngIf="showApprovedProductsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div class="p-6 border-b">
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-bold text-gray-900">Produits approuvés</h2>
+              <button
+                (click)="closeApprovedProductsModal()"
+                class="text-gray-400 hover:text-gray-600 transition duration-200"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+   
+          <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            <div *ngIf="isLoadingApprovedProducts" class="text-center py-12">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p class="mt-4 text-gray-600 font-medium">Chargement des produits approuvés...</p>
+            </div>
+   
+            <div *ngIf="!isLoadingApprovedProducts && getValidatedProducts().length === 0" class="text-center py-12">
+              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun produit approuvé</h3>
+              <p class="text-gray-600">Aucun produit approuvé pour le moment.</p>
+            </div>
+   
+            <div *ngIf="getValidatedProducts().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <!-- Afficher d'abord les produits VIP -->
+              <div *ngFor="let product of getValidatedProducts() | slice:0:getValidatedProducts().length" class="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                <!-- Image Section -->
+                <div class="relative">
+                  <div class="aspect-w-16 aspect-h-12 bg-gray-100">
+                    <img
+                      *ngIf="product.photos && product.photos.length > 0"
+                      [src]="product.photos[0].url"
+                      [alt]="product.title"
+                      class="w-full h-32 object-cover"
+                    >
+                    <div *ngIf="!product.photos || product.photos.length === 0" class="w-full h-32 bg-gray-200 flex items-center justify-center">
+                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <!-- VIP Badge -->
+                  <div *ngIf="product.isVip" class="absolute top-2 left-2">
+                    <span class="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-sm">
+                      ⭐ VIP
+                    </span>
+                  </div>
+                </div>
+   
+                <!-- Content Section -->
+                <div class="p-4">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{{ product.title }}</h3>
+                  <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ product.description }}</p>
+   
+                  <!-- Product Info -->
+                  <div class="space-y-2 mb-4">
+                    <div class="flex items-center justify-between text-sm">
+                      <span class="text-gray-500">Prix:</span>
+                      <span class="font-semibold text-gray-900">
+                        {{ product.priceCfa ? (product.priceCfa | number) + ' CFA' : 'Non spécifié' }}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                      <span class="text-gray-500">Vendeur:</span>
+                      <span class="text-gray-900 text-xs">
+                        {{ product.seller.displayName || product.seller.username || product.seller.email }}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                      <span class="text-gray-500">Approuvé le:</span>
+                      <span class="text-gray-900 text-xs">
+                        {{ product.updatedAt | date:'dd/MM/yyyy' }}
+                      </span>
+                    </div>
+                  </div>
+   
+                  <!-- Action Button -->
+                  <button
+                    (click)="viewProduct(product)"
+                    class="w-full bg-primary hover:bg-primary-light text-white px-3 py-2 rounded-md text-sm font-medium transition duration-200 flex items-center justify-center"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Voir le produit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" *ngIf="!isLoading && filteredProducts.length > 0">
+      <div *ngFor="let product of filteredProducts" class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200 overflow-hidden">
+        <!-- Image Section -->
+        <div class="relative">
+          <div class="aspect-w-16 aspect-h-12 bg-gray-100">
+            <img
+              *ngIf="product.photos && product.photos.length > 0"
+              [src]="product.photos[0].url"
+              [alt]="product.title"
+              class="w-full h-48 object-cover"
+            >
+            <div *ngIf="!product.photos || product.photos.length === 0" class="w-full h-48 bg-gray-200 flex items-center justify-center">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <!-- Status Badge -->
+          <div class="absolute top-3 right-3">
+            <span
+              class="px-2 py-1 rounded-full text-xs font-semibold shadow-sm"
+              [class]="product.status === 'VALIDE' ? 'bg-green-100 text-green-800' :
+                          product.status === 'REJETE' ? 'bg-red-100 text-red-800' :
+                          product.status === 'SUPPRIME' ? 'bg-gray-100 text-gray-800' :
+                          'bg-yellow-100 text-yellow-800'"
+            >
+              {{ product.status }}
+            </span>
+          </div>
+          <!-- VIP Badge -->
+          <div *ngIf="product.isVip" class="absolute top-3 left-3">
+            <span class="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-sm">
+              ⭐ VIP
+            </span>
+          </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="p-6">
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{{ product.title }}</h3>
+            <p class="text-gray-600 text-sm line-clamp-3">{{ product.description }}</p>
+          </div>
+
+          <!-- Product Info -->
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-500">Prix:</span>
+              <span class="font-semibold text-gray-900">
+                {{ product.priceCfa ? (product.priceCfa | number) + ' CFA' : 'Non spécifié' }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-500">Vendeur:</span>
+              <span class="text-gray-900">
+                {{ product.seller.displayName || product.seller.username || product.seller.email }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-500">Vues:</span>
+              <span class="text-gray-900">{{ product.views }}</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-2">
+            <button
+              *ngIf="product.status === 'EN_ATTENTE'"
+              (click)="approveProduct(product)"
+              class="flex-1 bg-primary hover:bg-primary-light text-white px-3 py-2 rounded-md text-sm font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              [disabled]="isLoading"
+            >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Approuver
+            </button>
+
+            <button
+              *ngIf="product.status === 'EN_ATTENTE'"
+              (click)="rejectProduct(product)"
+              class="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              [disabled]="isLoading"
+            >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Rejeter
+            </button>
+
+            <button
+              (click)="setVip(product)"
+              [class]="product.isVip ? 'bg-amber-600 hover:bg-amber-700' : 'bg-slate-600 hover:bg-slate-700'"
+              class="flex-1 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              [disabled]="isLoading"
+            >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+              </svg>
+              {{ product.isVip ? 'Retirer VIP' : 'VIP' }}
+            </button>
+
+            <button
+              (click)="deleteProduct(product)"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              [disabled]="isLoading"
+            >
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>

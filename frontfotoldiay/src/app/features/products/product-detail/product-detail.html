@@ -1,0 +1,123 @@
+<div class="container mx-auto px-4 py-8" *ngIf="product">
+  <button
+    (click)="goBack()"
+    class="mb-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition duration-300"
+  >
+    ← Retour aux produits
+  </button>
+
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <!-- Photos -->
+    <div class="relative">
+      <div *ngIf="product.photos && product.photos.length > 0" class="aspect-w-16 aspect-h-9">
+        <img
+          [src]="product.photos[0].url"
+          [alt]="product.title"
+          class="w-full h-96 object-cover"
+        >
+      </div>
+      <div *ngIf="!product.photos || product.photos.length === 0" class="w-full h-96 bg-gray-300 flex items-center justify-center">
+        <span class="text-gray-500 text-xl">Pas d'image disponible</span>
+      </div>
+
+      <!-- Badges -->
+      <div class="absolute top-4 left-4 flex gap-2">
+        <span *ngIf="product.isVip" class="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          VIP
+        </span>
+        <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
+          {{ product.status }}
+        </span>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ product.title }}</h1>
+          <p class="text-lg text-primary font-semibold" *ngIf="product.priceCfa">
+            {{ product.priceCfa | number }} CFA
+          </p>
+          <p class="text-gray-500" *ngIf="!product.priceCfa">Prix non spécifié</p>
+        </div>
+
+        <div class="text-right text-sm text-gray-500">
+          <p>{{ product.views }} vues</p>
+          <p>Publié le {{ product.createdAt | date:'dd/MM/yyyy' }}</p>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-2">Description</h3>
+        <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+      </div>
+
+      <div class="border-t pt-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-sm text-gray-600">Vendu par</p>
+            <p class="font-semibold">{{ product.seller.displayName || product.seller.username || product.seller.email }}</p>
+          </div>
+
+          <div class="flex gap-2" *ngIf="isAuthenticated">
+            <button
+              *ngIf="canEdit()"
+              (click)="editProduct()"
+              class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded transition duration-300"
+            >
+              Modifier
+            </button>
+
+            <button
+              *ngIf="canDelete()"
+              (click)="deleteProduct()"
+              class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition duration-300"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton Acheter -->
+      <div class="mt-6 text-center">
+        <button
+          (click)="showContact(product)"
+          class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg font-semibold transition duration-300"
+        >
+          Acheter
+        </button>
+      </div>
+
+      <!-- Modal Contact/Achat -->
+      <div *ngIf="selectedProduct && selectedProduct.id === product.id && showContactModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
+          <h3 class="text-xl font-bold mb-4 text-gray-800">Contact du vendeur</h3>
+          <div class="mb-2 text-gray-700">
+            <span class="font-semibold">Nom :</span>
+            {{ product.seller.displayName || product.seller.username || product.seller.email }}
+          </div>
+          <div class="mb-2 text-gray-700">
+            <span class="font-semibold">Téléphone :</span>
+            {{ product.seller.phone || 'Non renseigné' }}
+          </div>
+          <div class="mb-4">
+            <a *ngIf="product.seller.phone" [href]="'https://wa.me/' + product.seller.phone" target="_blank" class="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition">WhatsApp</a>
+          </div>
+          <button (click)="closeContactModal()" class="mt-2 px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-800">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="container mx-auto px-4 py-8 text-center">
+  <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+  <p class="mt-4 text-gray-600">Chargement du produit...</p>
+</div>
+
+<div *ngIf="errorMessage" class="container mx-auto px-4 py-8">
+  <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+    {{ errorMessage }}
+  </div>
+</div>

@@ -1,0 +1,58 @@
+/* Animations personnalisées pour la page d'accueil */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 1s ease-out;
+}
+
+.animation-delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* Effet de survol pour les cartes */
+.card-hover:hover {
+  box-shadow: 0 8px 20px rgba(139, 125, 107, 0.25);
+}
+
+/* Background image for home page - Full screen banner */
+.home-background {
+  background-image: url('/images/image 1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  min-height: 100vh;
+}
+
+.home-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}

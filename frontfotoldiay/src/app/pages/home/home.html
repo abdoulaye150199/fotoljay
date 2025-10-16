@@ -1,0 +1,72 @@
+<!-- Hero Banner Section - Full Screen -->
+<div class="h-screen home-background animate-fadeIn flex items-center justify-center relative">
+  <!-- Overlay gradient -->
+  <div class="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50"></div>
+  
+  <div class="container mx-auto px-4 relative z-10">
+    <!-- Hero Section -->
+    <div class="text-left max-w-2xl animate-fadeInUp">
+      <h1 class="text-5xl font-bold text-white mb-6 leading-tight">
+        Découvrez une nouvelle façon d'acheter et vendre <span class="text-primary-lighter">avec authenticité</span>
+      </h1>
+
+      <!-- Call to Action -->
+      <div class="flex gap-4 animate-fadeInUp animation-delay-500">
+        <a routerLink="/products" class="inline-block bg-primary text-white px-8 py-4 rounded-full font-semibold hover:bg-primary-light hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+          Voir les produits
+        </a>
+        <a routerLink="/register" class="inline-block bg-transparent text-primary-lighter border-2 border-primary-lighter px-8 py-4 rounded-full font-semibold hover:bg-primary-lighter hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl">
+          Se Connecter
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Products Section - Separate Section -->
+<div class="bg-gray-50 py-16">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Produits Récents</h2>
+
+      <div *ngIf="isLoading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p class="mt-4 text-gray-600">Chargement des produits...</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+        {{ errorMessage }}
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="!isLoading && products.length > 0">
+        <div *ngFor="let product of products" class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+          <div class="aspect-w-16 aspect-h-9 bg-gray-200">
+            <img
+              *ngIf="product.photos && product.photos.length > 0"
+              [src]="product.photos[0].url"
+              [alt]="product.title"
+              class="w-full h-48 object-cover"
+            >
+            <div *ngIf="!product.photos || product.photos.length === 0" class="w-full h-48 bg-gray-300 flex items-center justify-center">
+              <span class="text-gray-500">Pas d'image</span>
+            </div>
+          </div>
+
+          <div class="p-4">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ product.title }}</h3>
+            <p class="text-gray-600 text-sm mb-2 line-clamp-2">{{ product.description }}</p>
+
+            <div class="flex justify-between items-center mb-4">
+              <span class="text-lg font-bold text-primary" *ngIf="product.priceCfa">
+                {{ product.priceCfa | number }} CFA
+              </span>
+              <span class="text-sm text-gray-500" *ngIf="!product.priceCfa">Prix non spécifié</span>
+            </div>
+
+            <a [routerLink]="['/products', product.id]" class="w-full bg-primary text-white px-4 py-2 rounded text-center block hover:bg-primary-light transition duration-300">
+              Voir détails
+            </a>
+          </div>
+        </div>
+      </div>
+                </div>
+              </div>
